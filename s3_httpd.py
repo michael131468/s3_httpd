@@ -43,6 +43,7 @@ class S3RequestHandler(http.server.BaseHTTPRequestHandler):
             self.send_response(500)
 
 def main():
+    print("Starting...")
     httpd = http.server.HTTPServer(('localhost', 8081), S3RequestHandler)
     httpd.serve_forever()
 
