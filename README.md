@@ -6,6 +6,10 @@ Small Python server to make S3 buckets accessible via HTTP requests
 There are many http servers that make S3 buckets browseable. This is yet another
 one. It's very minimal, it is a single Python script, simply run it and it works.
 
+## Dependencies
+
+Requires boto3.
+
 ## AWS Credentials
 
 Configure per boto3 instructions: 
