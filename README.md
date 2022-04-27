@@ -7,6 +7,10 @@ Small Python server to make S3 buckets accessible via HTTP requests
 There are many http servers that make S3 buckets browseable. This is yet another
 one. It's very minimal, it is a single Python script, simply run it and it works.
 
+The main use case is to make private buckets browseable via http. My main use case
+is to do so in small CI jobs that need to fetch files with a private bucket without
+using the s3 apis (or temporary session urls).
+
 The server binds to port 8082.
 
 ## Dependencies
