@@ -1,4 +1,5 @@
 # s3_httpd
+
 Small Python server to make S3 buckets accessible via HTTP requests
 
 ## About
@@ -6,9 +7,11 @@ Small Python server to make S3 buckets accessible via HTTP requests
 There are many http servers that make S3 buckets browseable. This is yet another
 one. It's very minimal, it is a single Python script, simply run it and it works.
 
+The server binds to port 8082.
+
 ## Dependencies
 
-Requires boto3.
+Requires python3 and the boto3 python module installed.
 
 ## AWS Credentials
 
@@ -31,5 +34,5 @@ python3 s3_httpd.py &
 You can fetch files using the url format:
 
 ```
-http://127.0.0.1:8081/<bucket_name>/<prefix>/<filename>
+http://127.0.0.1:8082/<bucket_name>/<prefix>/<filename>
 ```
