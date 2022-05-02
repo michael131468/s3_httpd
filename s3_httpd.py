@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
 import http.server
+import os
 
 import boto3
 from botocore.errorfactory import ClientError
@@ -33,8 +34,7 @@ class S3RequestHandler(http.server.BaseHTTPRequestHandler):
 
         # Try to get the s3 metadata of the requested file, if not possible return 404
         try:
-            metadata = s3.head_object(Bucket=bucket, Key=f"{prefix}/{filename}")
-            #print(x["ResponseMetadata"]["HTTPHeaders"]["content-length"])
+            metadata = s3.head_object(Bucket=bucket, Key=os.path.join(prefix, filename)
         except ClientError:
             print(f"Not found: {bucket}/{prefix}/{filename}")
             self.send_response(404)
@@ -57,7 +57,7 @@ class S3RequestHandler(http.server.BaseHTTPRequestHandler):
         # Send file
         if not headers_only:
             try:
-                s3.download_fileobj(bucket, f"{prefix}/{filename}", self.wfile)
+                s3.download_fileobj(bucket, os.path.join(prefix, filename), self.wfile)
             except:
                 self.send_response(500)
 
