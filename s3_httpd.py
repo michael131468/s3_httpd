@@ -15,9 +15,7 @@ class S3RequestHandler(http.server.BaseHTTPRequestHandler):
         filename = path_parts[-1]
         return bucket, prefix, filename
 
-    def do_HEAD(self):
-        print(f"HEAD: {self.path}")
-
+    def serve_s3_object(self, headers_only=False):
         # Break up requested url into bucket, prefix, filename
         try:
             bucket, prefix, filename = self.split_path(self.path)
@@ -26,59 +24,50 @@ class S3RequestHandler(http.server.BaseHTTPRequestHandler):
             print(f"Invalid path: {path_parts}")
             self.send_response(404)
             self.end_headers()
+            if not headers_only:
+                self.wfile.write(b'File not found')
             return
 
         # Get connection to s3
         s3 = boto3.client('s3')
 
-        # Check file exists, if not return 404
+        # Try to get the s3 metadata of the requested file, if not possible return 404
         try:
-            s3.head_object(Bucket=bucket, Key=f"{prefix}/{filename}")
+            metadata = s3.head_object(Bucket=bucket, Key=f"{prefix}/{filename}")
+            #print(x["ResponseMetadata"]["HTTPHeaders"]["content-length"])
         except ClientError:
             print(f"Not found: {bucket}/{prefix}/{filename}")
             self.send_response(404)
             self.end_headers()
+            if not headers_only:
+                self.wfile.write(b'File not found')
             return
 
         # Return 200 headers
         self.send_response(200)
+        if filename.endswith((".htm", ".html")):
+            self.send_header('Content-type','text/html; charset=utf-8')
+        elif filename.endswith(".txt"):
+            self.send_header('Content-type','text/plain; charset=utf-8')
+        else:
+            self.send_header('Content-type','application/octet-stream; charset=utf-8')
+        self.send_header('Content-length', metadata["ResponseMetadata"]["HTTPHeaders"]["content-length"])
         self.end_headers()
+
+        # Send file
+        if not headers_only:
+            try:
+                s3.download_fileobj(bucket, f"{prefix}/{filename}", self.wfile)
+            except:
+                self.send_response(500)
+
+    def do_HEAD(self):
+        print(f"HEAD: {self.path}")
+        self.serve_s3_object(headers_only=True)
 
     def do_GET(self):
         print(f"GET: {self.path}")
-
-        # Break up requested url into bucket, prefix, filename
-        try:
-            bucket, prefix, filename = self.split_path(self.path)
-            print(f"bucket={bucket}, prefix={prefix}, filename={filename}")
-        except:
-            print(f"Invalid path: {path_parts}")
-            self.send_response(404)
-            self.end_headers()
-            self.wfile.write(b'File not found')
-            return
-
-        # Get connection to s3
-        s3 = boto3.client('s3')
-
-        # Check file exists, if not return 404
-        try:
-            s3.head_object(Bucket=bucket, Key=f"{prefix}/{filename}")
-        except ClientError:
-            print(f"Not found: {bucket}/{prefix}/{filename}")
-            self.send_response(404)
-            self.end_headers()
-            self.wfile.write(b'File not found')
-            return
-
-        # Try to serve s3 file
-        self.send_response(200)
-        self.end_headers()
-        try:
-            s3.download_fileobj(bucket, f"{prefix}/{filename}", self.wfile)
-        except:
-            # Write to socket
-            self.send_response(500)
+        self.serve_s3_object()
 
 def main():
     print("Starting...")
