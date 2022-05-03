@@ -34,7 +34,7 @@ class S3RequestHandler(http.server.BaseHTTPRequestHandler):
 
         # Try to get the s3 metadata of the requested file, if not possible return 404
         try:
-            metadata = s3.head_object(Bucket=bucket, Key=os.path.join(prefix, filename)
+            metadata = s3.head_object(Bucket=bucket, Key=os.path.join(prefix, filename))
         except ClientError:
             print(f"Not found: {bucket}/{prefix}/{filename}")
             self.send_response(404)
