@@ -6,6 +6,7 @@ import os
 import boto3
 from botocore.errorfactory import ClientError
 
+
 class S3RequestHandler(http.server.BaseHTTPRequestHandler):
     def split_path(self, path):
         path_parts = self.path.split("/")
@@ -26,11 +27,11 @@ class S3RequestHandler(http.server.BaseHTTPRequestHandler):
             self.send_response(404)
             self.end_headers()
             if not headers_only:
-                self.wfile.write(b'File not found')
+                self.wfile.write(b"File not found")
             return
 
         # Get connection to s3
-        s3 = boto3.client('s3')
+        s3 = boto3.client("s3")
 
         # Try to get the s3 metadata of the requested file, if not possible return 404
         try:
@@ -40,18 +41,26 @@ class S3RequestHandler(http.server.BaseHTTPRequestHandler):
             self.send_response(404)
             self.end_headers()
             if not headers_only:
-                self.wfile.write(b'File not found')
+                self.wfile.write(b"File not found")
             return
 
         # Return 200 headers
         self.send_response(200)
+
+        # Set content-type
         if filename.endswith((".htm", ".html")):
-            self.send_header('Content-type','text/html; charset=utf-8')
+            self.send_header("Content-type", "text/html; charset=utf-8")
         elif filename.endswith(".txt"):
-            self.send_header('Content-type','text/plain; charset=utf-8')
+            self.send_header("Content-type", "text/plain; charset=utf-8")
         else:
-            self.send_header('Content-type','application/octet-stream; charset=utf-8')
-        self.send_header('Content-length', metadata["ResponseMetadata"]["HTTPHeaders"]["content-length"])
+            self.send_header("Content-type", "application/octet-stream; charset=utf-8")
+
+        # Set content-length
+        self.send_header(
+            "Content-length",
+            metadata["ResponseMetadata"]["HTTPHeaders"]["content-length"],
+        )
+
         self.end_headers()
 
         # Send file
@@ -69,10 +78,12 @@ class S3RequestHandler(http.server.BaseHTTPRequestHandler):
         print(f"GET: {self.path}")
         self.serve_s3_object()
 
+
 def main():
     print("Starting...")
-    httpd = http.server.HTTPServer(('0.0.0.0', 8082), S3RequestHandler)
+    httpd = http.server.HTTPServer(("0.0.0.0", 8082), S3RequestHandler)
     httpd.serve_forever()
+
 
 if __name__ == "__main__":
     main()
