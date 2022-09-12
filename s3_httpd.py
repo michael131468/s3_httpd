@@ -33,6 +33,26 @@ class S3RequestHandler(http.server.BaseHTTPRequestHandler):
         # Get connection to s3
         s3 = boto3.client("s3")
 
+        # If filename is empty (url ends with /), return a listing of the prefix
+        if not filename:
+            try:
+                response = s3.list_objects_v2(
+                                              Bucket=bucket,
+                                              Delimiter='/',
+                                              Prefix=prefix,
+                                             )
+                print(response)
+                self.send_response(200)
+                self.end_headers()
+            except ClientError:
+                print(f"Not found: {bucket}/{prefix}/{filename}")
+                self.send_response(404)
+                self.end_headers()
+                if not headers_only:
+                    self.wfile.write(b"File not found")
+
+            return
+
         # Try to get the s3 metadata of the requested file, if not possible return 404
         try:
             metadata = s3.head_object(Bucket=bucket, Key=os.path.join(prefix, filename))
